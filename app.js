@@ -83,6 +83,7 @@ async function start (auth) {
   const calendarId = await AnimeTransferApp.getCalendarId()
   const app = new AnimeTransferApp({ auth, calendarId, spreadsheetId, range })
   const animes = await app.getAnimes()
+
   const go = await getAnswer(`There's ${animes.length} animes.\n\nContinue? (enter any value and press enter to terminate)`, false)
   if (go) {
     console.log('Terminating...')
@@ -107,10 +108,7 @@ class AnimeTransferApp {
       process.exit(0)
     }
     this.spreadsheetId = spreadsheetId
-    if (!range || !/[a-z][0-9]+:[a-z][0-9]+/i.test(range)) {
-      console.log('wrong range')
-      process.exit(0)
-    }
+
     this.range = range
 
     if (!calendarId) {
@@ -142,7 +140,7 @@ class AnimeTransferApp {
       console.log(`no id was given, try again`)
       return AnimeTransferApp.getSpreadsheetId(false)
     }
-    console.log(`Got sheet id${argv ? ' from command line' : ''}: ${spreadsheetId}}`)
+    console.log(`Got sheet id${argv && argvSheetId ? ' from command line' : ''}: ${spreadsheetId}}`)
     return spreadsheetId
   }
 
@@ -151,11 +149,7 @@ class AnimeTransferApp {
       var argvRangeId = getArgv('--range')
     }
     const range = argvRangeId ? argvRangeId : await getAnswer('Gimme range for this spreadsheet values (default - A2:H9): ', 'A2:H9')
-    if (!range || !/[a-z][0-9]+:[a-z][0-9]+/i.test(range)) {
-      console.log(`wrong range: "${range}"`)
-      return AnimeTransferApp.getRange(false)
-    }
-    console.log(`Got range${argv ? ' from command line' : ''}: ${range}`)
+    console.log(`Got range${argv && argvRangeId ? ' from command line' : ''}: ${range}`)
     return range
   }
 
@@ -168,12 +162,11 @@ class AnimeTransferApp {
       console.log('no id was given, try again')
       return AnimeTransferApp.getCalendarId(false)
     }
-    console.log(`Got calendar id${argv ? ' from command line' : ''}: ${calendarId}`)
+    console.log(`Got calendar id${argv && argvCalendarId ? ' from command line' : ''}: ${calendarId}`)
     return calendarId
   }
 
   async getAnimes () {
-    console.log(this.spreadsheetId, this.range)
     const sheetsValues = await this.sheets.spreadsheets.values.get({
       spreadsheetId: this.spreadsheetId,
       range: this.range
