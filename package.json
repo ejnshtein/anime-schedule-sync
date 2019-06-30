@@ -1,0 +1,22 @@
+{
+  "name": "anime-schedule-sheets-calendar-sync",
+  "version": "1.0.0",
+  "description": "Sync anime schedule in Google sheets with Google calendar",
+  "main": "index.js",
+  "keywords": [
+    "google-api",
+    "sheets",
+    "calendar"
+  ],
+  "author": "ejnshtein",
+  "license": "MIT",
+  "dependencies": {
+    "googleapis": "^40.0.0"
+  },
+  "devDependencies": {
+    "jikanjs": "^0.7.0"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  }
+}

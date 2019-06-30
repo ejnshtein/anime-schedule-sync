@@ -1,0 +1,46 @@
+{
+  "TV TOKYO": {
+    "background": "#fbd75b",
+    "id": 5
+  },
+  "AT-X": {
+    "background": "#ff887c",
+    "id": 4
+  },
+  "TOKYO MX": {
+    "background": "#7ae7bf",
+    "id": 2
+  },
+  "TBS": {
+    "background": "#e1e1e1",
+    "id": 8
+  },
+  "BS11": {
+    "background": "#dc2127",
+    "id": 11
+  },
+  "Fuji TV": {
+    "background": "#51b749",
+    "id": 10
+  },
+  "Nippon TV": {
+    "background": "#ffb878",
+    "id": 6
+  },
+  "Abema TV": {
+    "background": "#dbadff",
+    "id": 3
+  },
+  "NHK G": {
+    "background": "#5484ed",
+    "id": 9
+  },
+  "ABC TV": {
+    "background": "#46d6db",
+    "id": 7
+  },
+  "other": {
+    "background": "#a4bdfc",
+    "id": 1
+  }
+}
