@@ -10,7 +10,7 @@ GCalendar: [https://dsgstng.com/gcalendar](https://dsgstng.com/gcalendar) or [di
 Anime schedule in Google Sheets:  
 [2019/spring](https://docs.google.com/spreadsheets/d/1cS8fEJFKy2JB24e8DWTwfDLudahcIE0muGT4hzRzoFw/edit?usp=sharing)  
 [2019/summer](https://docs.google.com/spreadsheets/d/1ejrLQIgAbMQhmXHToe9bKQ79NVXumCpgM7sjjUf9zSc/edit?usp=sharing)
-[2019/fall]()
+[2019/fall](https://docs.google.com/spreadsheets/d/1ejrLQIgAbMQhmXHToe9bKQ79NVXumCpgM7sjjUf9zSc/edit#gid=1446483430)
 
 ## Using
 
