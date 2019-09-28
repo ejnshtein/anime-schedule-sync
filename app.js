@@ -1,15 +1,12 @@
 
 const fs = require('fs')
 const readline = require('readline')
-const {
-  google
-} = require('googleapis')
+const { google } = require('googleapis')
 const colors = require('./color.json')
-const jikanjs = require('jikanjs')
 
 const rl = readline.createInterface({
   input: process.stdin,
-  output: process.stdout,
+  output: process.stdout
 })
 // If modifying these scopes, delete token.json.
 const SCOPES = [
@@ -36,7 +33,7 @@ fs.readFile('client_secret.json', (err, content) => {
  * @param {Object} credentials The authorization client credentials.
  * @param {function} callback The callback to call with the authorized client.
  */
-function authorize(credentials, callback) {
+function authorize (credentials, callback) {
   const {
     client_secret,
     client_id,
@@ -50,6 +47,13 @@ function authorize(credentials, callback) {
     if (err) return getNewToken(oAuth2Client, callback)
     oAuth2Client.setCredentials(JSON.parse(token))
     callback(oAuth2Client)
+      .then(() => {
+        console.log('Done')
+      })
+      .catch(err => {
+        console.log(`Error: ${err.message}`)
+        console.log(err.stack)
+      })
   })
 }
 
@@ -59,10 +63,10 @@ function authorize(credentials, callback) {
  * @param {google.auth.OAuth2} oAuth2Client The OAuth2 client to get token for.
  * @param {getEventsCallback} callback The callback for the authorized client.
  */
-function getNewToken(oAuth2Client, callback) {
+function getNewToken (oAuth2Client, callback) {
   const authUrl = oAuth2Client.generateAuthUrl({
     access_type: 'offline',
-    scope: SCOPES,
+    scope: SCOPES
   })
   console.log('Authorize this app by visiting this url:', authUrl)
   rl.question('Enter the code from that page here: ', (code) => {
@@ -80,36 +84,122 @@ function getNewToken(oAuth2Client, callback) {
   })
 }
 
-/**
- * Prints the names and majors of students in a sample spreadsheet:
- * @see https://docs.google.com/spreadsheets/d/1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms/edit
- * @param {google.auth.OAuth2} auth The authenticated Google OAuth client.
- */
-async function start(auth) {
-  const sheets = google.sheets({
-    version: 'v4',
-    auth
-  })
-  const calendar = google.calendar({
-    version: 'v3',
-    auth
-  })
-  const sheetsValues = await sheets.spreadsheets.values.get({
-    spreadsheetId: '1Ci8F0_nYprQ6DMQ2rTYIN6IeJkxq9JiMkesVLh8WuCk',
-    range: 'A2:N7',
-  })
-  
-  let animes = flatten(sheetsValues.data.values.map(el => el.filter(Boolean).map(parseAnimeData)), 1)
-  animes = await Promise.all(animes.map(async item => {
-    return {
-      ...item,
-      mal_id: (await jikanjs.search('anime', item.title)).results[0].mal_id
+async function start (auth) {
+  const spreadsheetId = await AnimeTransferApp.getSpreadsheetId()
+  const range = await AnimeTransferApp.getRange()
+  const calendarId = await AnimeTransferApp.getCalendarId()
+  const app = new AnimeTransferApp({ auth, calendarId, spreadsheetId, range })
+  const animes = await app.getAnimes()
+  const go = await getAnswer(`There's ${animes.length} animes.\n\nContinue? (enter any value and press enter to terminate)`, false)
+  if (go) {
+    console.log('Terminating...')
+  }
+  const result = await app.addAnimesToCalendar(animes)
+  console.log('Done')
+  console.log(result)
+  process.exit(1)
+}
+
+class AnimeTransferApp {
+  constructor ({
+    auth,
+    calendarVersion = 'v3',
+    sheetsVersion = 'v4',
+    range,
+    spreadsheetId,
+    calendarId
+  }) {
+    if (!spreadsheetId) {
+      console.log('no sheets id was given, try again')
+      process.exit(0)
     }
-  }))
-    // https://calendar.google.com/calendar?cid=cWNlbnRyeTAxQGdtYWlsLmNvbQ
-  // console.log(
-   const response = await Promise.all(animes.map(async anime => {
-    // let anime = animes[0]
+    this.spreadsheetId = spreadsheetId
+    if (!range) {
+      console.log('no range was given, try again')
+      process.exit(0)
+    }
+    this.range = range
+
+    if (!calendarId) {
+      console.log('no calendar id was given, try again')
+      process.exit(0)
+    }
+    this.calendarId = calendarId
+
+    this.getAnimes = this.getAnimes.bind(this)
+    this.addAnimesToCalendar = this.addAnimesToCalendar.bind(this)
+
+    this.sheets = google.sheets({
+      version: sheetsVersion,
+      auth
+    })
+
+    this.calendar = google.calendar({
+      version: calendarVersion,
+      auth
+    })
+  }
+
+  static async getSpreadsheetId (argv = true) {
+    if (argv) {
+      var argvSheetId = getArgv('--sheetid')
+    }
+    const spreadsheetId = !argvSheetId ? await getAnswer('Gimme spreadsheet id: ') : argvSheetId
+    if (!spreadsheetId) {
+      console.log(`no id was given, try again`)
+      return AnimeTransferApp.getSpreadsheetId(false)
+    }
+    console.log(`Got sheet id${argv ? ' from command line' : ''}: ${spreadsheetId}`)
+    return spreadsheetId
+  }
+
+  static async getRange (argv = true) {
+    if (argv) {
+      var argvRangeId = getArgv('--range')
+    }
+    const range = !argvRangeId ? await getAnswer('Gimme range for this spreadsheet values (default - A2:H9): ', 'A2:H9') : argvRangeId
+    if (!range) {
+      console.log(`no id was given`)
+      return AnimeTransferApp.getRange(false)
+    }
+    console.log(`Got range${argv ? ' from command line' : ''}: ${range}`)
+    return range
+  }
+
+  static async getCalendarId (argv = true) {
+    if (argv) {
+      var argvCalendarId = getArgv('--calendarid')
+    }
+    const calendarId = !argvCalendarId ? await getAnswer('Gimme calendar id: ') : argvCalendarId
+    if (!calendarId) {
+      console.log('no id was given, try again')
+      return AnimeTransferApp.getCalendarId(false)
+    }
+    console.log(`Got calendar id${argv ? ' from command line' : ''}: ${calendarId}`)
+    return calendarId
+  }
+
+  async getAnimes () {
+    console.log(this.spreadsheetId, this.range)
+    const sheetsValues = await this.sheets.spreadsheets.values.get({
+      spreadsheetId: this.spreadsheetId,
+      range: this.range
+    })
+    return flatten(
+      sheetsValues.data.values.map(el =>
+        el
+          .filter(Boolean)
+          .filter(el => /^(.+?)\s?(?::|：)? ([0-9]{2}\/[0-9]{2}) ([0-9]{2}:[0-9]{2}) (\d+) (.+)$/i.test(el)
+          )
+          .map(parseAnimeData)
+      ),
+      1
+    )
+  }
+
+  async addAnimesToCalendar (animes) {
+    const response = []
+    for (const anime of animes) {
       const time = parseTime(anime.onair)
       const date = parseDate(anime.startDate)
       if (time.hour >= 24) {
@@ -128,50 +218,56 @@ async function start(auth) {
         date.date += 1
       }
       let endDateTime = `2019-${formatDate(date.month)}-${formatDate(date.date)}T${formatDate(time.hour)}:${formatDate(time.minute)}:00`
-      // console.log([startDateTime, endDateTime], anime, date, time)
-      // return
-      return calendar.events.insert({
-        calendarId: 'qcentry01@gmail.com',
-        requestBody: {
-          end: {
-            dateTime: endDateTime,
-            timeZone: 'Asia/Tokyo'
-          },
-          start: {
-            dateTime: startDateTime,
-            timeZone: 'Asia/Tokyo'
-          },
-          colorId: anime.color.id,
-          description: `https://myanimelist.net/anime/${anime.mal_id}`,
-          summary: `${anime.title} #1 (${anime.channel})`
-        }
+      const link = `https://myanimelist.net/anime/${anime.id}`
+      try {
+        var res = await this.calendar.events.insert({
+          calendarId: this.calendarId,
+          requestBody: {
+            end: {
+              dateTime: endDateTime,
+              timeZone: 'Asia/Tokyo'
+            },
+            start: {
+              dateTime: startDateTime,
+              timeZone: 'Asia/Tokyo'
+            },
+            colorId: anime.color.id,
+            description: `<a href="${link}">${link}</a>`,
+            summary: `${anime.title} #1 (${anime.channel})`
+          }
         })
+        console.log(`Added ${anime.title} to calendar at ${anime.startDate} ${anime.onair}`)
+      } catch (e) {
+        await getAnswer(`Anime "${anime.title}" error\nContinue?\n\n${e}`)
+      }
+      await sleep(1500)
+      response.push({
+        calendarResult: res
       })
-    )
-      rl.question('delete events? ', async answer => {
-        rl.close()
-        if (answer === 'y') {
-          await Promise.all(
-            response.map(el => calendar.events.delete({
-              calendarId: 'qcentry01@gmail.com',
-              eventId: el.id
-            }))
-          )
-          console.log('done')
-        } else {
-          process.exit(1)
-        }
-      })
-  // )
+    }
+    return response
+  }
+}
+
+function getAnswer (question, defaultAnswer) {
+  return new Promise(resolve => {
+    rl.question(question, answer => {
+      if (!answer && defaultAnswer) {
+        return resolve(defaultAnswer)
+      }
+      resolve(answer)
+    })
+  })
 }
 
 function parseAnimeData (anime) {
-  const animeData = anime.match(/(.+?)\s?(?::|：) ([0-9]{2}\/[0-9]{2}) ([0-9]{2}:[0-9]{2}) (.+)/i)
+  const animeData = anime.match(/^(.+?)\s?(?::|：)? ([0-9]{2}\/[0-9]{2}) ([0-9]{2}:[0-9]{2}) (\d+) (.+)$/i)
   return {
+    id: Number(animeData[4]),
     channel: animeData[1],
     startDate: animeData[2],
     onair: animeData[3],
-    title: animeData[4],
+    title: animeData[5],
     color: findColor(animeData[1])
   }
 }
@@ -203,3 +299,13 @@ const parseDate = date => {
   }
 }
 const formatDate = data => data.toString().length < 2 ? `0${data}` : data
+
+const sleep = timeout => new Promise(resolve => setTimeout(resolve, timeout))
+
+function getArgv (name) {
+  const id = process.argv.indexOf(name)
+  if (id !== -1) {
+    return process.argv[id + 1]
+  }
+  return undefined
+}

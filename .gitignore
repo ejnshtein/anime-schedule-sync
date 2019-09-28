@@ -1,3 +1,5 @@
 node_modules
 token.json
 package-lock.json
+_ejnshtein
+client_secret.json
