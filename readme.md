@@ -32,4 +32,4 @@ And now just start the app!
 
 ## Contact
 
-[Telegram](https://t.me/ejnshtein) or [Mail](https://ejnshtein@dsgstng.com)
+[Telegram](https://t.me/ejnshtein) or [Mail](mailto:ejnshtein@dsgstng.com)
