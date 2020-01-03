@@ -8,15 +8,17 @@ const colors = JSON.parse(readFileSync('./color.json'))
 
 const config = {}
 
-try {
-  const { spreadsheetId, range, calendarId } = JSON.parse(readFileSync(getArgv('--config') || './config.json'))
-  config.spreadsheetId = spreadsheetId || null
-  config.range = range || null
-  config.calendarId = calendarId || null
-} catch (e) {}
+if (argv('--config')) {
+  try {
+    const { spreadsheetId, range, calendarId } = JSON.parse(readFileSync(getArgv('--config'))
+    config.spreadsheetId = spreadsheetId || null
+    config.range = range || null
+    config.calendarId = calendarId || null
+  } catch (e) {}
+}
 
 for (const key in config) {
-  console.log(`${key} loaded from ${getArgv('--config') || './config.json'}`)
+  console.log(`${key} loaded from ${getArgv('--config') || './default-config.json'}`)
 }
 
 const { readFile, writeFile } = fs
