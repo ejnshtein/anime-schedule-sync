@@ -1,4 +1,3 @@
-
 import { promises as fs, readFileSync } from 'fs'
 import { createInterface } from 'readline'
 import googleapis from 'googleapis'
@@ -10,7 +9,7 @@ const config = {}
 
 if (argv('--config')) {
   try {
-    const { spreadsheetId, range, calendarId } = JSON.parse(readFileSync(getArgv('--config'))
+    const { spreadsheetId, range, calendarId } = JSON.parse(readFileSync(getArgv('--config')))
     config.spreadsheetId = spreadsheetId || null
     config.range = range || null
     config.calendarId = calendarId || null
@@ -289,9 +288,12 @@ function getAnswer (question, defaultAnswer) {
 }
 
 function parseAnimeData (anime) {
+  if (argv('--debug')) {
+    console.log('parseAnimeData ', anime)
+  }
   const animeData = anime.match(/^(.+?)\s?(?::|：)?\s([0-9]{2}\/[0-9]{2})\s([0-9]{2}:[0-9]{2})\s(\d+)\s(.+)$/im)
   if (argv('--debug')) {
-    console.log('parseAnimeData ', anime, animeData)
+    console.log('parseAnimeData ', animeData)
   }
   return {
     id: Number(animeData[4]),
