@@ -13,6 +13,7 @@ Anime schedule in Google Sheets:
 [2019/fall](https://docs.google.com/spreadsheets/d/1ejrLQIgAbMQhmXHToe9bKQ79NVXumCpgM7sjjUf9zSc/edit#gid=1446483430)  
 [2020/winter](https://docs.google.com/spreadsheets/d/1ejrLQIgAbMQhmXHToe9bKQ79NVXumCpgM7sjjUf9zSc/edit#gid=691871410)  
 [2020/spring](https://docs.google.com/spreadsheets/d/1ejrLQIgAbMQhmXHToe9bKQ79NVXumCpgM7sjjUf9zSc/edit#gid=940283767)  
+[2020/summer](https://docs.google.com/spreadsheets/d/1ejrLQIgAbMQhmXHToe9bKQ79NVXumCpgM7sjjUf9zSc/edit#gid=538123338)  
 
 ## Using
 
