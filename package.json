@@ -4,6 +4,9 @@
   "description": "Sync anime schedule in Google sheets with Google calendar",
   "main": "index.js",
   "type": "module",
+  "scripts": {
+    "start": "node app.js"
+  },
   "keywords": [
     "google-api",
     "sheets",
